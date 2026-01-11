@@ -12,7 +12,13 @@
       "Bash(jj status:*)",
       "Bash(jj describe:*)",
       "Bash(jj bookmark create:*)",
-      "Bash(jj git push:*)"
+      "Bash(jj git push:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh api:*)",
+      "Bash(go run:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(jj bookmark:*)"
     ]
   }
 }
