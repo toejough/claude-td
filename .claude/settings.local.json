@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(go mod init:*)",
+      "Bash(go get:*)",
+      "Bash(jj --version:*)",
+      "Bash(gh auth:*)",
+      "Bash(jj git init:*)",
+      "Bash(gh repo create:*)",
+      "Bash(jj git remote:*)",
+      "Bash(jj status:*)",
+      "Bash(jj describe:*)",
+      "Bash(jj bookmark create:*)",
+      "Bash(jj git push:*)"
+    ]
+  }
+}
