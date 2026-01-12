@@ -18,7 +18,8 @@
       "Bash(go run:*)",
       "Bash(go mod tidy:*)",
       "Bash(go build:*)",
-      "Bash(jj bookmark:*)"
+      "Bash(jj bookmark:*)",
+      "Bash(jj log:*)"
     ]
   }
 }

@@ -2,6 +2,20 @@
 
 Lessons, properties, and design decisions discovered during throwaway demos. This feeds directly into Phase 1 production code.
 
+## Core Design (from pre-demo planning)
+
+These decisions were made during planning and validated/refined by demos:
+
+- **Maze-building TD**: Players place towers to create paths, enemies pathfind around them
+- **Cost-weighted pathfinding**: Enemies choose optimal route including destruction costs
+- **Destructible everything**: All obstacles can be destroyed with sufficient resources
+- **Single base tile**: One enemy entering = immediate failure (high stakes)
+- **Grid-based**: 20x15 default, snap placement, configurable for future
+- **Hitscan combat (v1)**: Instant damage, room for projectiles later
+- **First-in-path targeting (v1)**: Target closest to base, configurable later
+- **Fixed timestep**: 60 ticks/second, deterministic simulation
+- **Pure logic core**: Game logic has zero rendering dependencies (testable headless)
+
 ## Properties Discovered
 
 These become simulation tests in Phase 1.
@@ -47,6 +61,27 @@ These become simulation tests in Phase 1.
 - [ ] Wave countdown must be visible so player knows when enemies are coming
 - [ ] Game must pause updates when in won/lost state (only allow restart)
 
+### Resource Economy
+
+- [ ] Starting resources must allow at least one tower placement
+- [ ] Tower cost must be positive
+- [ ] Kill reward must be positive
+- [ ] Tower refund (on removal) should be less than tower cost (no exploit)
+- [ ] Resource count must never go negative
+
+### Wave System
+
+- [ ] Waves must progress in order (1, 2, 3...)
+- [ ] Later waves should have more/harder enemies than earlier waves
+- [ ] All enemies from wave N must be spawned before wave N+1 starts
+- [ ] Win condition: survive all waves with no enemies remaining
+
+### Simulation
+
+- [ ] Game runs at fixed timestep (tick-based, not frame-based)
+- [ ] Same inputs must produce same outputs (deterministic)
+- [ ] Game logic must be independent of rendering framerate
+
 ## Design Decisions (Validated by Demos)
 
 ### Path Ownership
@@ -63,6 +98,26 @@ These become simulation tests in Phase 1.
 **Decision**: Grid coordinates (int) for logic, pixel coordinates (float64) for rendering/movement.
 **Why**: Smooth movement requires sub-cell positioning; pathfinding works on discrete cells.
 **Demo**: 0.4 - smooth enemy movement along path
+
+### Tower State Tracking
+**Decision**: Towers are tracked both in grid (TileTower) and in a separate Tower struct list.
+**Why**: Grid tells us "is there a tower here?" but Tower struct tracks per-tower state (cooldown).
+**Demo**: 0.5 - cooldown needs to be per-tower, not global
+
+### Game State Machine
+**Decision**: Explicit state enum (Playing/Won/Lost) controls update behavior.
+**Why**: Clean separation of game phases; prevents partial updates during end states.
+**Demo**: 0.6 - game freezes on win/lose, only restart allowed
+
+### Resource Economy
+**Decision**: Towers cost resources, kills reward resources, removal refunds partial cost.
+**Why**: Creates strategic tension - spend now for defense or save for later waves.
+**Demo**: 0.6 - balance between tower cost (25) and kill reward (10) matters
+
+### No-Path Behavior
+**Decision**: When an enemy has no valid path, they keep current path and walk through obstacles.
+**Why**: This is the "break through" mechanic - enemies can destroy blockers when trapped.
+**Demo**: 0.4 - implemented in recalculateEnemyPaths (if no path, keep current)
 
 ## Bugs & Corrections
 
@@ -91,17 +146,32 @@ These become simulation tests in Phase 1.
 - Using A* with clear isWalkable() predicate
 - Fixed-size grid with constants
 - Explicit draw layer ordering (tiles → grid lines → path → hover → enemies → lasers)
+- Game state machine for phase control
+- Tick-based simulation (60 TPS, logic decoupled from render)
+
+### Ebitengine Patterns Learned
+- Game interface: Update() for logic, Draw() for rendering, Layout() for sizing
+- vector package: DrawFilledRect, DrawFilledCircle, StrokeLine for primitives
+- ebitenutil.DebugPrint for quick text (replace with proper UI later)
+- ebiten.CursorPosition() returns pixels, divide by CellSize for grid coords
+- ebiten.IsMouseButtonPressed() for continuous press, need edge detection for single clicks
+- ebiten.IsKeyPressed() for keyboard input
+- SetWindowResizingMode for scalable window
 
 ### What Needs Improvement for Phase 1
 - Pathfinding should be extracted to pure function (currently method on Game)
 - Enemy update logic should be separate from rendering state
 - Need clear separation: World (grid) → Pathfinder → Entities → Renderer
+- Input handling should be its own layer (translate raw input to game commands)
+- Visual effects (lasers) should be separate from game logic
 
 ## Questions for Phase 1
 
 1. Should enemies store path as []Point or as a Path struct with helper methods?
-2. How to handle "no path" case - enemy stops? breaks through? despawns?
+2. ~~How to handle "no path" case~~ - **ANSWERED**: Enemy keeps current path and walks through obstacles (break-through mechanic)
 3. Path caching - recalculate on every grid change, or cache and invalidate?
+4. How to structure the simulation CLI for property testing?
+5. What's the interface between core logic and Ebitengine renderer?
 
 ---
 
